@@ -43,18 +43,25 @@ def terminate():
         sys.exit()
 
 def recvClassroom(client):
-    classroom_len = client.recv(8).decode("utf-8")
+    classroom_len = client.recv(4).decode("utf-8")
     classroom_len = int(classroom_len.strip())
     print("classroom length: "+str(classroom_len))
     classroom = []
+    prev_over = bytearray()
     for i in range (0, classroom_len):
-        b_student = bytearray()
-        for j in range (0, 241):
-            snippet = client.recv(1000)
+        b_student = prev_over
+        while len(b_student)<240100:
+            if len(b_student) == 240000:
+                snippet = client.recv(100)
+            else:
+                snippet = client.recv(1000)
             print ("snippet length: "+str(len(snippet)))
             b_student = b_student + snippet
-        print("length of student "+str(i+1)+" is: "+str(len(b_student)))
+        prev_over = b_student[240100:]
+        b_student = b_student[0:240100]
+        #print("length of student "+str(i+1)+" is: "+str(len(b_student)))
         name = b_student[0:100].decode("utf-8").strip()
+        print("name: "+name)
         view = np.frombuffer(b_student[100:], dtype="uint8")
         view = view.reshape(200, 400 , 3)
         classroom.append([name, view])
