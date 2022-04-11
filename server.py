@@ -6,8 +6,8 @@ import numpy as np
 
 HEADER = 50
 PORT = 5051
-SERVER = ""
-#SERVER = socket.gethostbyname(socket.gethostname())
+#SERVER = ""
+SERVER = socket.gethostbyname(socket.gethostname())
 ADDR = (SERVER, PORT)
 FORMAT = "utf-8"
 DISCONNECT_MESSAGE = "!DISCONNECT"
@@ -39,7 +39,6 @@ def addView (classroom, view):
             break
     if found == False:
         classroom.append(view)
-
 def printClassrooms():
     result = "classrooms: {"
     for k in classrooms.keys():
@@ -49,6 +48,7 @@ def printClassrooms():
         result += "]"
     result += "}"
     print(result)
+
 
 def printClassroomsThread():
     while True:
@@ -70,6 +70,22 @@ def handle_client(conn, addr):
     else:#teacher
         handle_teacher(conn, addr, msg)
 
+def connSendClassroom(conn, classroom):
+    classroom_len = str(len(classroom)).encode(FORMAT)
+    classroom_len = classroom_len + b' '*(4-len(classroom_len))
+    conn.send(classroom_len)
+    for student in classroom:
+        name = student[0]
+        screen = student[1]
+
+        name = name.encode(FORMAT)
+        name = name + b' '*(100-len(name))
+        b_student = name + screen
+        print("sent_length: "+str(len(b_student)))
+        for i in range(0, 241):
+            sent = b_student[i*1000: min(len(b_student), i*1000+1000)]
+            conn.send(sent)
+
 def handle_teacher(conn, addr, msg):
     meeting_id = msg.split("@")[1]
 
@@ -78,7 +94,8 @@ def handle_teacher(conn, addr, msg):
 
     while True:
         try:
-            conn.send(pickle.dumps(classrooms[meeting_id]))
+            print("send classrooms")
+            connSendClassroom(conn, classrooms[meeting_id])
         except ConnectionError:
             print("connection closed 2")
             break
@@ -87,34 +104,37 @@ def handle_teacher(conn, addr, msg):
 
     conn.close()
 
+def recvMessage (conn, msg_len):
+    msg = bytearray()
+    while len(msg) < msg_len:
+        msg += conn.recv(1600)
+    return msg
+
 def handle_student(conn, addr):
     while True:
-        msg = conn.recv(400000)
-        print("length of message: "+str(len(msg)))
-        if len(msg) > HEADER:#This is an entire image
-            #print("Handle Image")
-            meeting_id = msg[0:300].decode(FORMAT).strip()
-            print("meeting_id: "+meeting_id)
-            name = msg[300:400].decode(FORMAT).strip()
-            print("name: "+name)
-            time_stamp = float(msg[400:500].decode(FORMAT).strip())
-            print("time_stamp: "+str(time_stamp))
-            img = np.frombuffer(msg[500:], dtype="uint8")
-            img = img.reshape(200, 400, 3)
-            #print("length of image bytes: "+str(len(img)))
-            view = [name, img, time_stamp]
+        try:
+            msg = recvMessage(conn, 240500)
+        except ConnectionError:
+            print("student disconnected")
+            break
+        #print("length of message: "+str(len(msg)))
+        #print("Handle Image")
+        meeting_id = msg[0:300].decode(FORMAT).strip()
+        #print("meeting_id: "+meeting_id)
+        name = msg[300:400].decode(FORMAT).strip()
+        #print("name: "+name)
+        time_stamp = float(msg[400:500].decode(FORMAT).strip())
+        #print("time_stamp: "+str(time_stamp))
+        img = msg[500:]
+        #print("length of image bytes: "+str(len(img)))
+        view = [name, img, time_stamp]
 
-            if meeting_id in classrooms.keys():
-                addView(classrooms[meeting_id], view)
-            else:
-                classrooms[meeting_id] = [view]
+        if meeting_id in classrooms.keys():
+            addView(classrooms[meeting_id], view)
+        else:
+            classrooms[meeting_id] = [view]
 
-        else: #likely a disconnect message
-            msg = msg.decode(FORMAT)
-            if msg == DISCONNECT_MESSAGE:
-                break
-            else:
-                print("some bugs from student")
+
     removeStudent(meeting_id, name)
     conn.close()
 

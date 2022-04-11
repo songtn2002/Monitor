@@ -17,8 +17,8 @@ import socket
 client = None
 clientIsOn = False
 DISCONNECT_MESSAGE = "!DISCONNECT"
-ADDR = ("180.76.147.175", 5051)
-#ADDR = ("192.168.50.31", 5051)
+#ADDR = ("180.76.147.175", 5051)
+ADDR = ("192.168.50.31", 5051)
 
 
 window = None
@@ -103,55 +103,70 @@ def terminate():
 def closeClient():
     global clientIsOn, client
     if clientIsOn:
-        client.send(DISCONNECT_MESSAGE.encode("utf-8"))
         client.close()
         clientIsOn = False
     else:
         return
 
+def collectMsg():
+    screen = None
+
+    with mss() as sct:
+        # Get information of monitor 2
+        monitor_number = 1
+        mon = sct.monitors[monitor_number]
+        screen = sct.grab(mon)
+
+    screen = np.array(screen)
+    screen = cv2.resize(screen, (400, 200))
+    screen = cv2.cvtColor(screen, cv2.COLOR_RGBA2RGB)
+    screen = screen.tobytes()
+    print("screen_length: " + str(len(screen)))
+
+    meeting_id = idTextField.text()
+    b_meeting_id = meeting_id.encode("utf-8")
+    b_meeting_id = b_meeting_id + b' ' * (300 - len(b_meeting_id))
+    print("meeting_id: " + meeting_id)
+
+    name = nameTextField.text()
+    b_name = name.encode("utf-8")
+    b_name = b_name + b' ' * (100 - len(b_name))
+    print("name:" + nameTextField.text())
+
+    timeStamp = str(time.time()).encode("utf-8")
+    timeStamp = timeStamp + b' ' * (100 - len(timeStamp))
+    print("timeStamp:" + str(time.time()))
+
+    msg = b_meeting_id + b_name + timeStamp + screen
+    # print("image size: " + str(len(screen)))
+    print("length sent: " + str(len(msg)))
+    return msg
+
+def clientSend(client, msg):
+    beg = 0
+    while beg < len(msg):
+        end = beg + 1000
+        sent = msg[beg:min(end, len(msg))]
+        client.send(sent)
+        beg = end
+
 def startStreaming():
     #if the client is already running, don't do anything. Otherwise, continue with clientIsOn = True
     global clientIsOn
     if clientIsOn:
+        closeClient()
         return
-    else:
-        clientIsOn = True
 
-    def clientAction(meeting_id, name):
-        global client
+    def clientAction():
+        global client, clientIsOn
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect(ADDR)
+        clientIsOn = True
         client.send("Student".encode("utf-8"))
         while clientIsOn:
             print("loop")
-            screen = None
-
-            with mss() as sct:
-                # Get information of monitor 2
-                monitor_number = 1
-                mon = sct.monitors[monitor_number]
-                screen = sct.grab(mon)
-
-            screen = np.array(screen)
-            screen = cv2.resize(screen, (400, 200))
-            screen = cv2.cvtColor(screen, cv2.COLOR_RGBA2RGB)
-            screen = screen.tobytes()
-            print("screen_length: "+str(len(screen)))
-
-            b_meeting_id = meeting_id.encode("utf-8")
-            b_meeting_id = b_meeting_id + b' '*(300-len(b_meeting_id))
-            print("meeting_id " + idTextField.text())
-            b_name = name.encode("utf-8")
-            b_name = b_name + b' '*(100-len(b_name))
-            print("name:" + nameTextField.text())
-            timeStamp = str(time.time()).encode("utf-8")
-            timeStamp = timeStamp + b' ' * (100 - len(timeStamp))
-            print("timeStamp:" + str(time.time()))
-            msg = b_meeting_id + b_name + timeStamp + screen
-            #print("image size: " + str(len(screen)))
-            print("length sent: "+ str(len(msg)) )
-            client.send(msg)
-
+            msg = collectMsg()
+            clientSend(client, msg)
             # sleep for 1.2 seconds
             for i in range (0, 12):
                 if clientIsOn:
@@ -159,7 +174,7 @@ def startStreaming():
                 else:
                     break
 
-    thread = threading.Thread(target=clientAction, args=(idTextField.text(), nameTextField.text()))
+    thread = threading.Thread(target=clientAction, args=())
     thread.start()
     #window.hide()
 

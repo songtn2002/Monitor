@@ -3,6 +3,7 @@ import socket
 import sys
 import threading
 import time
+import numpy as np
 
 from PyQt5.QtGui import QIcon, QImage, QPixmap, QPainter, QPen, QColor, QBrush, QFont
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QLineEdit, QPushButton, QApplication, QGridLayout
@@ -17,7 +18,7 @@ connect_last_clicked = time.time()
 def printStudents():
     res = "["
     for block in students:
-        bStr = "[" + block[0] + ", "+str(block[2])+"]"
+        bStr = "[" + block[0] +"]"
         res += bStr + ", "
     res += "]"
     print(res)
@@ -25,8 +26,8 @@ def printStudents():
 client = None
 prev_meeting_id = ""
 DISCONNECT_MESSAGE = "!DISCONNECT"
-ADDR = ("180.76.147.175", 5051)
-#ADDR = ("192.168.50.31", 5051)
+#ADDR = ("180.76.147.175", 5051)
+ADDR = ("192.168.50.31", 5051)
 
 def closeClient():
     global client
@@ -40,6 +41,24 @@ def terminate():
         print(err)
     finally:
         sys.exit()
+
+def recvClassroom(client):
+    classroom_len = client.recv(8).decode("utf-8")
+    classroom_len = int(classroom_len.strip())
+    print("classroom length: "+str(classroom_len))
+    classroom = []
+    for i in range (0, classroom_len):
+        b_student = bytearray()
+        for j in range (0, 241):
+            snippet = client.recv(1000)
+            print ("snippet length: "+str(len(snippet)))
+            b_student = b_student + snippet
+        print("length of student "+str(i+1)+" is: "+str(len(b_student)))
+        name = b_student[0:100].decode("utf-8").strip()
+        view = np.frombuffer(b_student[100:], dtype="uint8")
+        view = view.reshape(200, 400 , 3)
+        classroom.append([name, view])
+    return classroom
 
 def reconnect():
     global clientIsOn
@@ -62,12 +81,12 @@ def reconnect():
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect(ADDR)
         meeting_id = window.meeting_id_textField.text()
+        prev_meeting_id = meeting_id
         startString = "Teacher@"+ meeting_id
         client.send(startString.encode("utf-8"))
-        prev_meeting_id = meeting_id
         while True:
             try:
-                students = pickle.loads(client.recv(400000*16))
+                students = recvClassroom(client)
             except OSError:
                 break
             printStudents() #print all the student views received

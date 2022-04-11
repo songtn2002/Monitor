@@ -17,7 +17,7 @@ def send_data():
     print("length of message: "+str(len(msg)))
     msg = msg.encode("utf-8")
     print("number of bytes sent: "+str(len(msg)) )
-    client.send(msg)
+    client.sendall(msg)
     client.close()
 
 send_data()
