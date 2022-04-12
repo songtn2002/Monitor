@@ -96,6 +96,8 @@ def reconnect():
                 students = recvClassroom(client)
             except OSError:
                 break
+            except Exception as exp:
+                print(exp)
             printStudents() #print all the student views received
         print("client closed")
 
