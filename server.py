@@ -17,6 +17,7 @@ connected = {}
 
 def removeStudent(meeting_id, name):
     if meeting_id == "%prev%" and name == "%prev%":
+        print("prev exit")
         return
     classroom = classrooms[meeting_id]
     removeIndex = -1
@@ -39,6 +40,8 @@ def addView (classroom, view):
             break
     if found == False:
         classroom.append(view)
+
+
 def printClassrooms():
     result = "classrooms: {"
     for k in classrooms.keys():
@@ -48,7 +51,6 @@ def printClassrooms():
         result += "]"
     result += "}"
     print(result)
-
 
 def printClassroomsThread():
     while True:
@@ -108,8 +110,15 @@ def handle_teacher(conn, addr, msg):
 
 def recvMessage (conn, msg_len):
     msg = bytearray()
+    i = 1
     while len(msg) < msg_len:
-        msg += conn.recv(1600)
+        #print("i: "+str(i))
+        received = conn.recv(1000)
+        if len(received) == 0:
+            raise ConnectionAbortedError("connection closed on the student client side")
+        #print("received: "+str(len(received)))
+        msg += received
+        i += 1
     return msg
 
 def handle_student(conn, addr):
@@ -118,6 +127,9 @@ def handle_student(conn, addr):
             msg = recvMessage(conn, 240500)
         except ConnectionError:
             print("student disconnected")
+            break
+        except Exception as excp:
+            print("Exception: "+str(excp))
             break
         #print("length of message: "+str(len(msg)))
         #print("Handle Image")
@@ -136,7 +148,7 @@ def handle_student(conn, addr):
         else:
             classrooms[meeting_id] = [view]
 
-
+    print("ready to remove student @"+meeting_id+" with name: "+name)
     removeStudent(meeting_id, name)
     conn.close()
 
