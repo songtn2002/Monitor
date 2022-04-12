@@ -155,25 +155,36 @@ def startStreaming():
     global clientIsOn
     if clientIsOn:
         closeClient()
-        return
 
     def clientAction():
         global client, clientIsOn
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect(ADDR)
+        print("Connected to ["+str(ADDR)+"]")
         clientIsOn = True
         client.send("Student".encode("utf-8"))
         while clientIsOn:
             print("loop")
             msg = collectMsg()
-            clientSend(client, msg)
+            try:
+                clientSend(client, msg)
+            except OSError:
+                print("client closed")
+                break
+            except Exception as exp:
+                print("client closed with exception @"+str(exp))
+                break
             # sleep for 1.2 seconds
             for i in range (0, 12):
                 if clientIsOn:
                     time.sleep(0.1)
                 else:
+                    print("client closed")
                     break
 
+    if not clientIsOn:
+        while len(threading.enumerate()) >= 3:
+            time.sleep(0.01)
     thread = threading.Thread(target=clientAction, args=())
     thread.start()
     #window.hide()
