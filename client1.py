@@ -108,7 +108,7 @@ def closeClient():
     else:
         return
 
-def collectMsg():
+def collectMsg(name, meeting_id):
     screen = None
 
     with mss() as sct:
@@ -123,12 +123,10 @@ def collectMsg():
     screen = screen.tobytes()
     print("screen_length: " + str(len(screen)))
 
-    meeting_id = idTextField.text()
     b_meeting_id = meeting_id.encode("utf-8")
     b_meeting_id = b_meeting_id + b' ' * (300 - len(b_meeting_id))
     print("meeting_id: " + meeting_id)
 
-    name = nameTextField.text()
     b_name = name.encode("utf-8")
     b_name = b_name + b' ' * (100 - len(b_name))
     print("name:" + nameTextField.text())
@@ -156,7 +154,7 @@ def startStreaming():
     if clientIsOn:
         closeClient()
 
-    def clientAction():
+    def clientAction(name, meeting_id):
         global client, clientIsOn
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect(ADDR)
@@ -165,7 +163,7 @@ def startStreaming():
         client.send("Student".encode("utf-8"))
         while clientIsOn:
             print("loop")
-            msg = collectMsg()
+            msg = collectMsg(name, meeting_id)
             try:
                 clientSend(client, msg)
             except OSError:
@@ -183,9 +181,11 @@ def startStreaming():
                     break
 
     if not clientIsOn:
-        while len(threading.enumerate()) >= 3:
+        print("thread count: "+str(len(threading.enumerate())) )
+        while len(threading.enumerate()) >= 2:
+            print("wait for previous connection exit")
             time.sleep(0.01)
-    thread = threading.Thread(target=clientAction, args=())
+    thread = threading.Thread(target=clientAction, args=(nameTextField.text(), idTextField.text()))
     thread.start()
     #window.hide()
 

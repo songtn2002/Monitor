@@ -41,7 +41,6 @@ def addView (classroom, view):
     if found == False:
         classroom.append(view)
 
-
 def printClassrooms():
     result = "classrooms: {"
     for k in classrooms.keys():
@@ -55,7 +54,7 @@ def printClassrooms():
 def printClassroomsThread():
     while True:
         printClassrooms()
-        print(f"[ACTIVE CONNECTIONS] {threading.activeCount() - 2}")
+        print(f"[ACTIVE CONNECTIONS] {len(threading.enumerate()) - 2}")
         time.sleep(2)
 
 printThread = threading.Thread(target=printClassroomsThread, args=())
