@@ -55,7 +55,7 @@ def recvClassroom(client):
                 snippet = client.recv(100)
             else:
                 snippet = client.recv(1000)
-            print ("snippet length: "+str(len(snippet)))
+            #print ("snippet length: "+str(len(snippet)))
             b_student = b_student + snippet
         prev_over = b_student[240100:]
         b_student = b_student[0:240100]

@@ -47,7 +47,7 @@ def printClassrooms():
         result += "\""+ k + "\":"+"["
         for item in classrooms[k]:
             result += "[" + item[0] +", "+ str(item[2]) +"], "
-        result += "]"
+        result += "], "
     result += "}"
     print(result)
 
@@ -82,11 +82,11 @@ def connSendClassroom(conn, classroom):
         name = name.encode(FORMAT)
         name = name + b' '*(100-len(name))
         b_student = name + screen
-        print("student_length: "+str(len(b_student)))
+        #print("student_length: "+str(len(b_student)))
         for i in range(0, 241):
             sent = b_student[i*1000: min(len(b_student), i*1000+1000)]
-            if len(sent) != 1000:
-                print("snippet @ i = "+str(i+1)+": " + str(len(sent)))
+            #if len(sent) != 1000:
+                #print("snippet @ i = "+str(i+1)+": " + str(len(sent)))
             conn.send(sent)
 
 def handle_teacher(conn, addr, msg):
