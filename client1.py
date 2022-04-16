@@ -17,8 +17,8 @@ import socket
 client = None
 clientIsOn = False
 DISCONNECT_MESSAGE = "!DISCONNECT"
-#ADDR = ("180.76.147.175", 5051)
-ADDR = ("192.168.50.31", 5051)
+ADDR = ("180.76.147.175", 5051)
+#ADDR = ("192.168.50.31", 5051)
 
 
 window = None
@@ -160,7 +160,9 @@ def startStreaming():
         client.connect(ADDR)
         print("Connected to ["+str(ADDR)+"]")
         clientIsOn = True
-        client.send("Student".encode("utf-8"))
+        startMsg = "Student".encode("utf-8")
+        startMsg = startMsg + b" "*(64-len(startMsg))
+        client.send(startMsg)
         while clientIsOn:
             print("loop")
             msg = collectMsg(name, meeting_id)

@@ -26,8 +26,8 @@ def printStudents():
 client = None
 prev_meeting_id = ""
 DISCONNECT_MESSAGE = "!DISCONNECT"
-#ADDR = ("180.76.147.175", 5051)
-ADDR = ("192.168.50.31", 5051)
+ADDR = ("180.76.147.175", 5051)
+#ADDR = ("192.168.50.31", 5051)
 
 def closeClient():
     global client
@@ -89,8 +89,9 @@ def reconnect():
         client.connect(ADDR)
         meeting_id = window.meeting_id_textField.text()
         prev_meeting_id = meeting_id
-        startString = "Teacher@"+ meeting_id
-        client.send(startString.encode("utf-8"))
+        startString = ("Teacher@"+ meeting_id).encode("utf-8")
+        startString = startString + b" "*(64-len(startString))
+        client.send(startString)
         while True:
             try:
                 students = recvClassroom(client)

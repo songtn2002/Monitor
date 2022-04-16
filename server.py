@@ -4,10 +4,9 @@ import threading
 import time
 import numpy as np
 
-HEADER = 50
 PORT = 5051
-#SERVER = ""
-SERVER = socket.gethostbyname(socket.gethostname())
+SERVER = ""
+#SERVER = socket.gethostbyname(socket.gethostname())
 ADDR = (SERVER, PORT)
 FORMAT = "utf-8"
 DISCONNECT_MESSAGE = "!DISCONNECT"
@@ -65,7 +64,10 @@ server.bind(ADDR)
 def handle_client(conn, addr):
     print(f"[NEW CONNECTION] {addr} connected.")
 
-    msg = conn.recv(HEADER).decode("utf-8")
+    msg = conn.recv(64)
+    print("Start Message Length: "+str(len(msg)))
+    msg = msg.decode("utf-8").strip()
+
     if msg == "Student":#student connection
         handle_student(conn, addr)
     else:#teacher
@@ -112,12 +114,14 @@ def recvMessage (conn, msg_len):
     i = 1
     while len(msg) < msg_len:
         #print("i: "+str(i))
-        received = conn.recv(1000)
+        len_to_recv = min(1000, msg_len-len(msg))
+        received = conn.recv(len_to_recv)
         if len(received) == 0:
             raise ConnectionAbortedError("connection closed on the student client side")
         #print("received: "+str(len(received)))
         msg += received
         i += 1
+
     return msg
 
 def handle_student(conn, addr):
