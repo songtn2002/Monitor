@@ -45,7 +45,9 @@ def printClassrooms():
     for k in classrooms.keys():
         result += "\""+ k + "\":"+"["
         for item in classrooms[k]:
-            result += "[" + item[0] +", "+ str(item[2]) +"], "
+            time_stamp = str(item[2])
+            time_stamp = time_stamp.split(".")[0][-4:]
+            result += "[" + item[0] +", "+ time_stamp +"], "
         result += "], "
     result += "}"
     print(result)
@@ -54,6 +56,10 @@ def printClassroomsThread():
     while True:
         printClassrooms()
         print(f"[ACTIVE CONNECTIONS] {len(threading.enumerate()) - 2}")
+
+        time_stamp = str(time.time())
+        time_stamp = time_stamp.split(".")[0][-4:]
+        print("[CURRENT TIME]: "+time_stamp)
         time.sleep(2)
 
 printThread = threading.Thread(target=printClassroomsThread, args=())
@@ -125,11 +131,17 @@ def recvMessage (conn, msg_len):
     return msg
 
 def handle_student(conn, addr):
+    conn.settimeout(4)
+    meeting_id = "%prev%"
+    name = "%prev%"
     while True:
         try:
             msg = recvMessage(conn, 240500)
         except ConnectionError:
             print("student disconnected")
+            break
+        except socket.timeout:
+            print("student disconnected: timeout")
             break
         except Exception as excp:
             print("Exception: "+str(excp))
@@ -139,7 +151,7 @@ def handle_student(conn, addr):
         meeting_id = msg[0:300].decode(FORMAT).strip()
         #print("meeting_id: "+meeting_id)
         name = msg[300:400].decode(FORMAT).strip()
-        #print("name: "+name)
+        #print(name+"@"+meeting_id+"'s message length: "+str(len(msg)))
         time_stamp = float(msg[400:500].decode(FORMAT).strip())
         #print("time_stamp: "+str(time_stamp))
         img = msg[500:]
