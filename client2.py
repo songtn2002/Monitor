@@ -97,6 +97,11 @@ def reconnect():
                 students = recvClassroom(client)
             except OSError:
                 break
+            except UnicodeDecodeError or ValueError:
+                closeClient()
+                new_thread = threading.Thread(target=clientAction, args=())
+                new_thread.start()
+                break
             except Exception as exp:
                 print(exp)
             printStudents() #print all the student views received

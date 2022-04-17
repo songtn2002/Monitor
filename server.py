@@ -117,21 +117,22 @@ def handle_teacher(conn, addr, msg):
 
 def recvMessage (conn, msg_len):
     msg = bytearray()
-    i = 1
     while len(msg) < msg_len:
-        #print("i: "+str(i))
+        if len(msg) == 0:
+            conn.settimeout(6)
+        else:
+            conn.settimeout(3)
+
         len_to_recv = min(1000, msg_len-len(msg))
         received = conn.recv(len_to_recv)
         if len(received) == 0:
             raise ConnectionAbortedError("connection closed on the student client side")
         #print("received: "+str(len(received)))
         msg += received
-        i += 1
 
     return msg
 
 def handle_student(conn, addr):
-    conn.settimeout(4)
     meeting_id = "%prev%"
     name = "%prev%"
     while True:

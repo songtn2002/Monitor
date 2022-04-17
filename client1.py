@@ -183,7 +183,7 @@ def startStreaming():
                     break
 
     if not clientIsOn:
-        print("thread count: "+str(len(threading.enumerate())) )
+        #print("thread count: "+str(len(threading.enumerate())) )
         while len(threading.enumerate()) >= 2:
             print("wait for previous connection exit")
             time.sleep(0.01)
