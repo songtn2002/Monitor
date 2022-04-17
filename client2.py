@@ -68,10 +68,12 @@ def recvClassroom(client):
     return classroom
 
 def reconnect():
-    global clientIsOn
+    global clientIsOn, connect_last_clicked
     #limit the interval between click to more than 0.5 seconds
     if (time.time() - connect_last_clicked) <= 0.5:
         return
+    else:
+        connect_last_clicked = time.time()
 
     #do nothing if meeting id is blank
     if window.meeting_id_textField.text() == "":
@@ -97,7 +99,8 @@ def reconnect():
                 students = recvClassroom(client)
             except OSError:
                 break
-            except UnicodeDecodeError or ValueError:
+            except (UnicodeDecodeError, ValueError):
+                print("[PARSE ERROR]: close client and reconnect")
                 closeClient()
                 new_thread = threading.Thread(target=clientAction, args=())
                 new_thread.start()

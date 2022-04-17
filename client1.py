@@ -28,6 +28,10 @@ tray_icon = None
 idTextField = None
 nameTextField = None
 
+start_last_clicked = time.time()
+prev_meeting_id = "%prev_meeting_id%"
+prev_name = "%prev_name%"
+
 class MainWindow (QWidget):
 
     def __init__(self, parent=None):
@@ -149,20 +153,43 @@ def clientSend(client, msg):
         beg = end
 
 def startStreaming():
-    #if the client is already running, don't do anything. Otherwise, continue with clientIsOn = True
-    global clientIsOn
+    global clientIsOn, start_last_clicked, prev_name, prev_meeting_id
+
+    #protection against violent operations
+    if (time.time() - start_last_clicked) <= 0.5:
+        print("useless click")
+        return
+    else:
+        start_last_clicked = time.time()
+
+    #if meeting_id or name is blank, do nothing
+    if nameTextField.text().strip() == "" or idTextField.text().strip() == "":
+        print("useless click")
+        return
+
+    #if client is on, and name+meeting_id remain the same, do nothing
+    if nameTextField.text() == prev_name and idTextField.text() == prev_meeting_id and clientIsOn:
+        print("useless click")
+        return
+
+    #make sure client is closed
     if clientIsOn:
         closeClient()
 
     def clientAction(name, meeting_id):
-        global client, clientIsOn
+        global client, clientIsOn, prev_name, prev_meeting_id
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect(ADDR)
         print("Connected to ["+str(ADDR)+"]")
+
         clientIsOn = True
+        prev_meeting_id = meeting_id
+        prev_name = name
+
         startMsg = "Student".encode("utf-8")
         startMsg = startMsg + b" "*(64-len(startMsg))
         client.send(startMsg)
+
         while clientIsOn:
             print("loop")
             msg = collectMsg(name, meeting_id)
@@ -182,11 +209,13 @@ def startStreaming():
                     print("client closed")
                     break
 
-    if not clientIsOn:
+    #if client is turned off, make sure that previous thread exits
+    if (not clientIsOn) and len(threading.enumerate()) >= 2:
         #print("thread count: "+str(len(threading.enumerate())) )
         while len(threading.enumerate()) >= 2:
             print("wait for previous connection exit")
             time.sleep(0.01)
+
     thread = threading.Thread(target=clientAction, args=(nameTextField.text(), idTextField.text()))
     thread.start()
     #window.hide()
