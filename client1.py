@@ -18,6 +18,7 @@ client = None
 clientIsOn = False
 DISCONNECT_MESSAGE = "!DISCONNECT"
 ADDR = ("180.76.147.175", 5051)
+MY = "dlskk90105kdlslnvnsl"
 #ADDR = ("192.168.50.31", 5051)
 
 
@@ -172,9 +173,14 @@ def startStreaming():
         print("useless click")
         return
 
-    #make sure client is closed
+    #make sure client is closed, now clientIsOn = False
     if clientIsOn:
         closeClient()
+
+    #if client is turned off, make sure that previous thread exits
+    while len(threading.enumerate()) >= 2:
+        print("wait for previous connection exit")
+        time.sleep(0.01)
 
     def clientAction(name, meeting_id):
         global client, clientIsOn, prev_name, prev_meeting_id
@@ -187,6 +193,7 @@ def startStreaming():
         prev_name = name
 
         startMsg = "Student".encode("utf-8")
+        startMsg = MY.encode("utf-8")+startMsg
         startMsg = startMsg + b" "*(64-len(startMsg))
         client.send(startMsg)
 
@@ -208,13 +215,6 @@ def startStreaming():
                 else:
                     print("client closed")
                     break
-
-    #if client is turned off, make sure that previous thread exits
-    if (not clientIsOn) and len(threading.enumerate()) >= 2:
-        #print("thread count: "+str(len(threading.enumerate())) )
-        while len(threading.enumerate()) >= 2:
-            print("wait for previous connection exit")
-            time.sleep(0.01)
 
     thread = threading.Thread(target=clientAction, args=(nameTextField.text(), idTextField.text()))
     thread.start()

@@ -10,6 +10,7 @@ SERVER = ""
 ADDR = (SERVER, PORT)
 FORMAT = "utf-8"
 DISCONNECT_MESSAGE = "!DISCONNECT"
+MY = "dlskk90105kdlslnvnsl"
 
 classrooms = {}
 connected = {}
@@ -72,6 +73,15 @@ def handle_client(conn, addr):
 
     msg = conn.recv(64)
     print("Start Message Length: "+str(len(msg)))
+
+    #20 bytes in front as password, check if the password is correct
+    MY_rcv = msg[0:20].decode("utf-8")
+    if MY_rcv != MY:
+        return #if password incorrect, do nothing
+    else:
+        print("Password Correct!")
+
+    msg = msg[20:]
     msg = msg.decode("utf-8").strip()
 
     if msg == "Student":#student connection

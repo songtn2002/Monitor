@@ -28,6 +28,7 @@ prev_meeting_id = ""
 DISCONNECT_MESSAGE = "!DISCONNECT"
 ADDR = ("180.76.147.175", 5051)
 #ADDR = ("192.168.50.31", 5051)
+MY = "dlskk90105kdlslnvnsl"
 
 def closeClient():
     global client
@@ -89,9 +90,12 @@ def reconnect():
         global window, students, client, prev_meeting_id
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect(ADDR)
+
         meeting_id = window.meeting_id_textField.text()
         prev_meeting_id = meeting_id
+
         startString = ("Teacher@"+ meeting_id).encode("utf-8")
+        startString = MY.encode("utf-8") + startString
         startString = startString + b" "*(64-len(startString))
         client.send(startString)
         while True:
