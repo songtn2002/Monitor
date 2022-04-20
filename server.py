@@ -14,25 +14,25 @@ DISCONNECT_MESSAGE = "!DISCONNECT"
 classrooms = {}
 connected = {}
 
-def removeStudent(meeting_id, name):
+def removeStudent(meeting_id, name, addr_str):
     if meeting_id == "%prev%" and name == "%prev%":
         print("prev exit")
         return
     classroom = classrooms[meeting_id]
     removeIndex = -1
     for i in range (0, len(classroom)):
-        if classroom[i][0] == name:
+        if classroom[i][0] == name and classroom[i][3] == addr_str:
             removeIndex = i
             break
     if removeIndex != -1:
         classroom.pop(removeIndex)
     else:
-        print("Cannot find student with name: "+name)
+        print("Cannot find student with name: "+name+" with address: "+addr_str)
 
 def addView (classroom, view):
     found = False
     for i in classroom:
-        if i[0] == view[0]: #if the same name, then change the img and time_stamp
+        if i[0] == view[0] and i[3] == view[3]: #if the same name, then change the img and time_stamp
             i[1] = view[1]
             i[2] = view[2]
             found = True
@@ -157,15 +157,16 @@ def handle_student(conn, addr):
         #print("time_stamp: "+str(time_stamp))
         img = msg[500:]
         #print("length of image bytes: "+str(len(img)))
-        view = [name, img, time_stamp]
+        addr_str = str(addr)
+        view = [name, img, time_stamp, addr_str]
 
         if meeting_id in classrooms.keys():
             addView(classrooms[meeting_id], view)
         else:
             classrooms[meeting_id] = [view]
 
-    print("ready to remove student @"+meeting_id+" with name: "+name)
-    removeStudent(meeting_id, name)
+    print("ready to remove student @classroom: "+meeting_id+" with address @"+addr_str+" of name: "+name)
+    removeStudent(meeting_id, name, addr_str)
     conn.close()
 
 def start():
