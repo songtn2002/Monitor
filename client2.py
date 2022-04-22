@@ -24,6 +24,7 @@ def printStudents():
     print(res)
 
 client = None
+clientIsOn = False
 prev_meeting_id = ""
 DISCONNECT_MESSAGE = "!DISCONNECT"
 ADDR = ("180.76.147.175", 5051)
@@ -31,9 +32,11 @@ ADDR = ("180.76.147.175", 5051)
 MY = "dlskk90105kdlslnvnsl"
 
 def closeClient():
-    global client
-    if client:
+    global client, clientIsOn, prev_meeting_id
+    if client and clientIsOn:
         client.close()
+        clientIsOn = False
+        prev_meeting_id = ""
 
 def terminate():
     try:
@@ -72,36 +75,49 @@ def reconnect():
     global clientIsOn, connect_last_clicked
     #limit the interval between click to more than 0.5 seconds
     if (time.time() - connect_last_clicked) <= 0.5:
+        print("useless click 1")
         return
     else:
         connect_last_clicked = time.time()
 
     #do nothing if meeting id is blank
     if window.meeting_id_textField.text() == "":
+        print("useless click 2")
         return
 
     #do nothing if client is on and meeting id has not yet changed
     if window.meeting_id_textField.text() == prev_meeting_id:
+        print("useless click 3")
         return
 
     closeClient()
 
     def clientAction():
-        global window, students, client, prev_meeting_id
-        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client.connect(ADDR)
+        global window, students, client, prev_meeting_id, clientIsOn
+        try:
+            client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            client.connect(ADDR)
 
-        meeting_id = window.meeting_id_textField.text()
-        prev_meeting_id = meeting_id
+            meeting_id = window.meeting_id_textField.text()
 
-        startString = ("Teacher@"+ meeting_id).encode("utf-8")
-        startString = MY.encode("utf-8") + startString
-        startString = startString + b" "*(64-len(startString))
-        client.send(startString)
+            startString = ("Teacher@"+ meeting_id).encode("utf-8")
+            startString = MY.encode("utf-8") + startString
+            startString = startString + b" "*(64-len(startString))
+            client.send(startString)
+        except OSError:
+            print("[OS Error]: cannot connect to remote host")
+            closeClient()
+            return
+        else:
+            clientIsOn = True
+            prev_meeting_id = meeting_id
+            print("successfully connected to server")
+
         while True:
             try:
                 students = recvClassroom(client)
             except OSError:
+                print("[OS Error]: connection aborted")
                 break
             except (UnicodeDecodeError, ValueError):
                 print("[PARSE ERROR]: close client and reconnect")
@@ -111,8 +127,10 @@ def reconnect():
                 break
             except Exception as exp:
                 print(exp)
+                break
             printStudents() #print all the student views received
         print("client closed")
+        closeClient()
 
     thread = threading.Thread(target=clientAction, args=())
     thread.start()
