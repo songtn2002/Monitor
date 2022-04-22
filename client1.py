@@ -153,6 +153,41 @@ def clientSend(client, msg):
         client.send(sent)
         beg = end
 
+def clientAction(name, meeting_id):
+    global client, clientIsOn, prev_name, prev_meeting_id
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect(ADDR)
+    print("Connected to ["+str(ADDR)+"]")
+
+    clientIsOn = True
+    prev_meeting_id = meeting_id
+    prev_name = name
+
+    startMsg = "Student".encode("utf-8")
+    startMsg = MY.encode("utf-8")+startMsg
+    startMsg = startMsg + b" "*(64-len(startMsg))
+    client.send(startMsg)
+
+    while clientIsOn:
+        print("loop")
+        msg = collectMsg(name, meeting_id)
+        try:
+            clientSend(client, msg)
+        except OSError:
+            print("[OS Error]: client closed")
+            break
+        except Exception as exp:
+            print("client closed with exception @"+str(exp))
+            break
+        # sleep for 1.2 seconds
+        for i in range (0, 12):
+            if clientIsOn:
+                time.sleep(0.1)
+            else:
+                print("client closed")
+                break
+
+
 def startStreaming():
     global clientIsOn, start_last_clicked, prev_name, prev_meeting_id
 
@@ -168,11 +203,6 @@ def startStreaming():
         print("useless click")
         return
 
-    #if client is on, and name+meeting_id remain the same, do nothing
-    if nameTextField.text() == prev_name and idTextField.text() == prev_meeting_id and clientIsOn:
-        print("useless click")
-        return
-
     #make sure client is closed, now clientIsOn = False
     if clientIsOn:
         closeClient()
@@ -182,41 +212,18 @@ def startStreaming():
         print("wait for previous connection exit")
         time.sleep(0.01)
 
-    def clientAction(name, meeting_id):
-        global client, clientIsOn, prev_name, prev_meeting_id
-        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client.connect(ADDR)
-        print("Connected to ["+str(ADDR)+"]")
+    def securedClientAction(name, meeting_id):  # surround clientAction with try/except
+        try:
+            clientAction(name, meeting_id) #keep sending to server until stopped
+        except Exception as exp:
+            print("Exception @"+str(exp))
+            print("client closed @ secured")
+            closeClient()
+        else:
+            print("secure close client")
+            closeClient()
 
-        clientIsOn = True
-        prev_meeting_id = meeting_id
-        prev_name = name
-
-        startMsg = "Student".encode("utf-8")
-        startMsg = MY.encode("utf-8")+startMsg
-        startMsg = startMsg + b" "*(64-len(startMsg))
-        client.send(startMsg)
-
-        while clientIsOn:
-            print("loop")
-            msg = collectMsg(name, meeting_id)
-            try:
-                clientSend(client, msg)
-            except OSError:
-                print("client closed")
-                break
-            except Exception as exp:
-                print("client closed with exception @"+str(exp))
-                break
-            # sleep for 1.2 seconds
-            for i in range (0, 12):
-                if clientIsOn:
-                    time.sleep(0.1)
-                else:
-                    print("client closed")
-                    break
-
-    thread = threading.Thread(target=clientAction, args=(nameTextField.text(), idTextField.text()))
+    thread = threading.Thread(target=securedClientAction, args=(nameTextField.text(), idTextField.text()))
     thread.start()
     #window.hide()
 
