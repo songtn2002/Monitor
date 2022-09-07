@@ -17,7 +17,7 @@ import socket
 client = None
 clientIsOn = False
 DISCONNECT_MESSAGE = "!DISCONNECT"
-ADDR = ("180.76.147.175", 5051)
+ADDR = ("120.48.128.151", 5051)
 MY = "dlskk90105kdlslnvnsl"
 #ADDR = ("192.168.50.31", 5051)
 
@@ -101,17 +101,14 @@ def terminate():
     except Exception as err:
         print(err)
     finally:
-        global tray_icon
-        tray_icon.hide()
         sys.exit()
 
 def closeClient():
     global clientIsOn, client
     if clientIsOn:
-        client.close()
         clientIsOn = False
-    else:
-        return
+    if client:
+        client.close()
 
 def collectMsg(name, meeting_id):
     screen = None
@@ -155,11 +152,11 @@ def clientSend(client, msg):
 
 def clientAction(name, meeting_id):
     global client, clientIsOn, prev_name, prev_meeting_id
+    clientIsOn = True
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect(ADDR)
     print("Connected to ["+str(ADDR)+"]")
 
-    clientIsOn = True
     prev_meeting_id = meeting_id
     prev_name = name
 
@@ -193,19 +190,20 @@ def startStreaming():
 
     #protection against violent operations
     if (time.time() - start_last_clicked) <= 0.5:
-        print("useless click")
+        print("useless click - violent")
         return
     else:
         start_last_clicked = time.time()
 
     #if meeting_id or name is blank, do nothing
     if nameTextField.text().strip() == "" or idTextField.text().strip() == "":
-        print("useless click")
+        print("useless click - blank")
         return
 
-    #make sure client is closed, now clientIsOn = False
+    #if client is on, return
     if clientIsOn:
-        closeClient()
+        print("useless click - client is on")
+        return
 
     #if client is turned off, make sure that previous thread exits
     while len(threading.enumerate()) >= 2:
@@ -217,10 +215,10 @@ def startStreaming():
             clientAction(name, meeting_id) #keep sending to server until stopped
         except Exception as exp:
             print("Exception @"+str(exp))
-            print("client closed @ secured")
+            print("client closed @ exception")
             closeClient()
         else:
-            print("secure close client")
+            print("close client just in case")
             closeClient()
 
     thread = threading.Thread(target=securedClientAction, args=(nameTextField.text(), idTextField.text()))

@@ -27,16 +27,16 @@ client = None
 clientIsOn = False
 prev_meeting_id = ""
 DISCONNECT_MESSAGE = "!DISCONNECT"
-ADDR = ("180.76.147.175", 5051)
+ADDR = ("120.48.128.151", 5051)
 #ADDR = ("192.168.50.31", 5051)
 MY = "dlskk90105kdlslnvnsl"
 
 def closeClient():
-    global client, clientIsOn, prev_meeting_id
-    if client and clientIsOn:
-        client.close()
+    global client, clientIsOn
+    if clientIsOn:
         clientIsOn = False
-        prev_meeting_id = ""
+    if client:
+        client.close()
 
 def terminate():
     try:
@@ -73,24 +73,29 @@ def recvClassroom(client):
 
 def reconnect():
     global clientIsOn, connect_last_clicked
-    #limit the interval between click to more than 0.5 seconds
-    if (time.time() - connect_last_clicked) <= 0.5:
-        print("useless click 1")
+
+    #prohibit violent operations
+    if (time.time() - connect_last_clicked) <= 2:
+        print("useless click 1 - violent")
         return
-    else:
-        connect_last_clicked = time.time()
 
     #do nothing if meeting id is blank
     if window.meeting_id_textField.text() == "":
-        print("useless click 2")
+        print("useless click  - blank")
         return
 
     #do nothing if client is on and meeting id has not yet changed
-    if window.meeting_id_textField.text() == prev_meeting_id:
-        print("useless click 3")
-        return
+    #if clientIsOn and window.meeting_id_textField.text() == prev_meeting_id:
+    #    print("useless click 3 - still the same meeting id")
+    #    return
 
+    connect_last_clicked = time.time() #record this effective clicking
     closeClient()
+
+    #make sure that previous thread exits
+    while len(threading.enumerate()) >= 2:
+        print("wait for previous connection exit")
+        time.sleep(0.01)
 
     def clientAction():
         global window, students, client, prev_meeting_id, clientIsOn
@@ -121,7 +126,7 @@ def reconnect():
                 break
             except (UnicodeDecodeError, ValueError):
                 print("[PARSE ERROR]: close client and reconnect")
-                closeClient()
+                client.close()
                 new_thread = threading.Thread(target=clientAction, args=())
                 new_thread.start()
                 break

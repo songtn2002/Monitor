@@ -138,6 +138,7 @@ def recvMessage (conn, msg_len):
         if len(received) == 0:
             raise ConnectionAbortedError("connection closed on the student client side")
         #print("received: "+str(len(received)))
+        conn.settimeout(None)
         msg += received
 
     return msg
@@ -157,16 +158,11 @@ def handle_student(conn, addr):
         except Exception as excp:
             print("Exception: "+str(excp))
             break
-        #print("length of message: "+str(len(msg)))
-        #print("Handle Image")
+
         meeting_id = msg[0:300].decode(FORMAT).strip()
-        #print("meeting_id: "+meeting_id)
         name = msg[300:400].decode(FORMAT).strip()
-        #print(name+"@"+meeting_id+"'s message length: "+str(len(msg)))
         time_stamp = float(msg[400:500].decode(FORMAT).strip())
-        #print("time_stamp: "+str(time_stamp))
         img = msg[500:]
-        #print("length of image bytes: "+str(len(img)))
         addr_str = str(addr)
         view = [name, img, time_stamp, addr_str]
 
