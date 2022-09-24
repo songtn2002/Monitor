@@ -64,7 +64,7 @@ class MainWindow (QWidget):
         buttonStop = QPushButton("")
         buttonStop.setIcon(QIcon("stop.png"))
         buttonStop.setIconSize(QSize(24, 24))
-        buttonStop.clicked.connect(closeClient)
+        buttonStop.clicked.connect(closeButton)
 
         global tray_icon
         tray_icon = QSystemTrayIcon(self)
@@ -95,6 +95,17 @@ class MainWindow (QWidget):
         event.ignore()
         self.hide()
 
+
+START_STREAMING = 1
+STREAMING_STOPPED = 2
+def iconShowMessage(message_type):
+    if message_type == START_STREAMING:
+        tray_icon.showMessage("Start Streaming", "You are now watched by your teacher. Be careful!", msecs=1500)
+    elif message_type == STREAMING_STOPPED:
+        tray_icon.showMessage("Stop Streaming", "Phew... You turned off the video stream.",msecs=1500)
+    else:
+        print("Wrong Message Type")
+
 def terminate():
     try:
         closeClient()
@@ -109,6 +120,10 @@ def closeClient():
         clientIsOn = False
     if client:
         client.close()
+
+def closeButton():
+    closeClient()
+    iconShowMessage(STREAMING_STOPPED)
 
 def collectMsg(name, meeting_id):
     screen = None
@@ -153,6 +168,8 @@ def clientSend(client, msg):
 def clientAction(name, meeting_id):
     global client, clientIsOn, prev_name, prev_meeting_id
     clientIsOn = True
+    iconShowMessage(START_STREAMING)
+
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect(ADDR)
     print("Connected to ["+str(ADDR)+"]")
@@ -166,7 +183,9 @@ def clientAction(name, meeting_id):
     client.send(startMsg)
 
     while clientIsOn:
-        print("loop")
+        time_start_loop = time.time()#record the time when loop is started
+        print("loop starts at "+str(time_start_loop))
+
         msg = collectMsg(name, meeting_id)
         try:
             clientSend(client, msg)
@@ -176,13 +195,10 @@ def clientAction(name, meeting_id):
         except Exception as exp:
             print("client closed with exception @"+str(exp))
             break
-        # sleep for 1.2 seconds
-        for i in range (0, 12):
-            if clientIsOn:
-                time.sleep(0.1)
-            else:
-                print("client closed")
-                break
+
+        # Keep every loop within 5 seconds
+        while time.time() - time_start_loop < 5 and clientIsOn:
+            time.sleep(0.1)
 
 
 def startStreaming():

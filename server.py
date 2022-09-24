@@ -90,21 +90,24 @@ def handle_client(conn, addr):
         handle_teacher(conn, addr, msg)
 
 def connSendClassroom(conn, classroom):
-    classroom_len = str(len(classroom)).encode(FORMAT)
-    classroom_len = classroom_len + b' '*(4-len(classroom_len))
-    conn.send(classroom_len)
+    b_students = []
     for student in classroom:
         name = student[0]
         screen = student[1]
 
         name = name.encode(FORMAT)
         name = name + b' '*(100-len(name))
-        b_student = name + screen
-        #print("student_length: "+str(len(b_student)))
+        b_student1 = name + screen
+        b_students.append(b_student1)
+    #first turn all the students into bytes
+
+    #then send them all
+    classroom_len = str(len(classroom)).encode(FORMAT)
+    classroom_len = classroom_len + b' ' * (4 - len(classroom_len))
+    conn.send(classroom_len)
+    for b_student2 in b_students:
         for i in range(0, 241):
-            sent = b_student[i*1000: min(len(b_student), i*1000+1000)]
-            #if len(sent) != 1000:
-                #print("snippet @ i = "+str(i+1)+": " + str(len(sent)))
+            sent = b_student2[i*1000: min(len(b_student2), i*1000+1000)]
             conn.send(sent)
 
 def handle_teacher(conn, addr, msg):
@@ -115,7 +118,6 @@ def handle_teacher(conn, addr, msg):
 
     while True:
         try:
-            #print("send classrooms")
             connSendClassroom(conn, classrooms[meeting_id])
         except ConnectionError:
             print("connection closed 2")
@@ -128,19 +130,15 @@ def handle_teacher(conn, addr, msg):
 def recvMessage (conn, msg_len):
     msg = bytearray()
     while len(msg) < msg_len:
-        if len(msg) == 0:
-            conn.settimeout(6)
-        else:
-            conn.settimeout(3)
 
         len_to_recv = min(1000, msg_len-len(msg))
         received = conn.recv(len_to_recv)
+
         if len(received) == 0:
+            print("[Received: 0] Not enough bytes received")
             raise ConnectionAbortedError("connection closed on the student client side")
         #print("received: "+str(len(received)))
-        conn.settimeout(None)
         msg += received
-
     return msg
 
 def handle_student(conn, addr):
