@@ -6,7 +6,8 @@ import time
 import numpy as np
 
 from PyQt5.QtGui import QIcon, QImage, QPixmap, QPainter, QPen, QColor, QBrush, QFont
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QLineEdit, QPushButton, QApplication, QGridLayout
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QLineEdit, QPushButton, QApplication, \
+    QGridLayout, QSystemTrayIcon
 from PyQt5.QtCore import Qt, QTimer
 
 window = None
@@ -14,6 +15,21 @@ labels = [[None, None, None, None], [None, None, None, None], [None, None, None,
 students = []
 
 connect_last_clicked = time.time()
+
+tray_icon = None
+SUCCESSFULLY_CONNECTED = 1
+CONNECTION_FAILED = 2
+CANNOT_CONNECT = 3
+
+def iconShowMessage(message_type):
+    if message_type == SUCCESSFULLY_CONNECTED:
+        tray_icon.showMessage("Successfully Connected", "Graphics will start to load. You will see your students shortly.", msecs=1000)
+    elif message_type == CONNECTION_FAILED:
+        tray_icon.showMessage("Connection Failed", "Please re-click the connect button. Sorry for inconvenience...",msecs=1000)
+    elif message_type == CANNOT_CONNECT:
+        tray_icon.showMessage("Cannot Connect to Server", "Please check your internet connectivity and reconnect",msecs=1000)
+    else:
+        print("Wrong Message Type")
 
 def printStudents():
     res = "["
@@ -109,13 +125,17 @@ def reconnect():
             startString = MY.encode("utf-8") + startString
             startString = startString + b" "*(64-len(startString))
             client.send(startString)
-        except OSError:
-            print("[OS Error]: cannot connect to remote host")
+        except OSError as ose:
+            print(ose)
+            iconShowMessage(CANNOT_CONNECT)
+
             closeClient()
             return
         else:
             clientIsOn = True
             prev_meeting_id = meeting_id
+
+            iconShowMessage(SUCCESSFULLY_CONNECTED)
             print("successfully connected to server")
 
         while True:
@@ -123,6 +143,7 @@ def reconnect():
                 students = recvClassroom(client)
             except OSError:
                 print("[OS Error]: connection aborted")
+                iconShowMessage(CONNECTION_FAILED)
                 break
             except (UnicodeDecodeError, ValueError):
                 print("[PARSE ERROR]: close client and reconnect")
@@ -134,6 +155,7 @@ def reconnect():
                 print(exp)
                 break
             printStudents() #print all the student views received
+
         print("client closed")
         closeClient()
 
@@ -177,6 +199,11 @@ class MainWindow(QWidget):
         self.main_layout.addLayout(self.bottom_area)
 
         self.setLayout(self.main_layout)
+
+        global tray_icon
+        tray_icon = QSystemTrayIcon(self)
+        tray_icon.setIcon(QIcon("tray.jpg"))
+        tray_icon.show()
 
         self.timer = QTimer()
         self.timer.timeout.connect(lambda: self.updateImages())
