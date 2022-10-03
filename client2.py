@@ -1,4 +1,3 @@
-import pickle
 import socket
 import sys
 import threading
@@ -138,6 +137,7 @@ def reconnect():
             iconShowMessage(SUCCESSFULLY_CONNECTED)
             print("successfully connected to server")
 
+        parse_error = False
         while True:
             try:
                 students = recvClassroom(client)
@@ -147,6 +147,7 @@ def reconnect():
                 break
             except (UnicodeDecodeError, ValueError):
                 print("[PARSE ERROR]: close client and reconnect")
+                parse_error = True
                 client.close()
                 new_thread = threading.Thread(target=clientAction, args=())
                 new_thread.start()
@@ -156,8 +157,9 @@ def reconnect():
                 break
             printStudents() #print all the student views received
 
-        print("client closed")
-        closeClient()
+        if not parse_error:
+            print("client closed")
+            closeClient()
 
     thread = threading.Thread(target=clientAction, args=())
     thread.start()

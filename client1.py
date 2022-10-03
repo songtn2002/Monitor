@@ -1,4 +1,3 @@
-import pickle
 import sys
 import threading
 import time
@@ -157,6 +156,7 @@ def collectMsg(name, meeting_id):
     print("length sent: " + str(len(msg)))
     return msg
 
+
 def clientSend(client, msg):
     beg = 0
     while beg < len(msg):
@@ -197,8 +197,9 @@ def clientAction(name, meeting_id):
             break
 
         # Keep every loop within 5 seconds
-        while time.time() - time_start_loop < 5 and clientIsOn:
+        while time.time() - time_start_loop < 3 and clientIsOn:
             time.sleep(0.1)
+
 
 
 def startStreaming():

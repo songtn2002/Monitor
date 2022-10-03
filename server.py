@@ -1,4 +1,4 @@
-import pickle
+import datetime
 import socket
 import threading
 import time
@@ -130,6 +130,10 @@ def handle_teacher(conn, addr, msg):
 def recvMessage (conn, msg_len):
     msg = bytearray()
     while len(msg) < msg_len:
+        if len(msg) == 0:
+            conn.settimeout(6)
+        else:
+            conn.settimeout(3)
 
         len_to_recv = min(1000, msg_len-len(msg))
         received = conn.recv(len_to_recv)
