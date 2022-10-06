@@ -92,7 +92,9 @@ class MainWindow (QWidget):
 
     def closeEvent(self, event):
         event.ignore()
-        self.hide()
+        terminate()
+
+
 
 
 START_STREAMING = 1

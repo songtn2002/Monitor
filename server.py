@@ -45,7 +45,9 @@ def printClassrooms():
     result = "classrooms: {"
     for k in classrooms.keys():
         result += "\""+ k + "\":"+"["
-        for item in classrooms[k]:
+        classroom_size = len(classrooms[k])
+        for index in range(0, classroom_size):
+            item = classrooms[k][index]
             time_stamp = str(item[2])
             time_stamp = time_stamp.split(".")[0][-4:]
             result += "[" + item[0] +", "+ time_stamp +"], "
@@ -122,6 +124,7 @@ def handle_teacher(conn, addr, msg):
         except ConnectionError:
             print("connection closed 2")
             break
+       
         #sleep for a while
         time.sleep(1.5)
 
@@ -130,11 +133,12 @@ def handle_teacher(conn, addr, msg):
 def recvMessage (conn, msg_len):
     msg = bytearray()
     while len(msg) < msg_len:
-        if len(msg) == 0:
-            conn.settimeout(6)
-        else:
-            conn.settimeout(3)
 
+        if len(msg) == 0:
+            conn.settimeout(10)
+        else:
+            conn.settimeout(7)
+            
         len_to_recv = min(1000, msg_len-len(msg))
         received = conn.recv(len_to_recv)
 
