@@ -3,10 +3,11 @@ import sys
 import threading
 import time
 import numpy as np
+from datetime import date
 
 from PyQt5.QtGui import QIcon, QImage, QPixmap, QPainter, QPen, QColor, QBrush, QFont
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QLineEdit, QPushButton, QApplication, \
-    QGridLayout, QSystemTrayIcon
+    QGridLayout, QSystemTrayIcon, QErrorMessage, QDialog
 from PyQt5.QtCore import Qt, QTimer
 
 window = None
@@ -234,13 +235,52 @@ class MainWindow(QWidget):
             labels[x][y].setPixmap(QPixmap.fromImage(image))
             painter.end()
 
+def isExpired(x_year, x_month, x_day):
+    today = date.today()
+    year = today.year
+    month = today.month
+    day = today.day
+    if year > x_year:
+        return True
+    elif year == x_year and month > x_month:
+        return True
+    elif year == x_year and month == x_month and day > x_day:
+        return True
+    else:
+        return False
+
+class ExpireDialog(QDialog):
+
+    def __init__(self, message, parent=None):
+        super(ExpireDialog, self).__init__(parent)
+
+        layout = QVBoxLayout()
+        self.label = QLabel(message)
+        self.label.setAlignment(Qt.AlignHCenter)
+        self.buttonOk = QPushButton("OK")
+        self.buttonOk.clicked.connect(self.buttonOkAction)
+        layout.addWidget(self.label)
+        layout.addWidget(self.buttonOk)
+        self.setLayout(layout)
+
+        self.setFixedSize(500, 100)
+
+        self.setWindowIcon(QIcon("tray.jpg"))
+
+    def buttonOkAction(self):
+        self.hide()
+        sys.exit()
 
 if __name__ == '__main__':
     app = QApplication([])
     app.setApplicationName("Zoom监视器")
-    window = MainWindow()
-    window.setFixedWidth(1650)
-    window.setFixedHeight(900)
-    window.setWindowIcon(QIcon("tray.jpg"))
-    window.show()
+    if isExpired(2022, 11, 20):
+        exp_message = ExpireDialog("你的试用期已到")
+        exp_message.show()
+    else:
+        window = MainWindow()
+        window.setFixedWidth(1650)
+        window.setFixedHeight(900)
+        window.setWindowIcon(QIcon("tray.jpg"))
+        window.show()
     app.exec_()

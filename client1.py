@@ -3,14 +3,15 @@ import threading
 import time
 import numpy as np
 import cv2
+from datetime import date
 from PyQt5 import QtGui
 from mss import mss
 import PyQt5
-from PyQt5.QtCore import QSize
+from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QIcon
 
 from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout, QLabel, QLineEdit, QPushButton, QProgressDialog, \
-    QSystemTrayIcon, QAction, QMenu
+    QSystemTrayIcon, QAction, QMenu, QDialog, QVBoxLayout
 import socket
 
 client = None
@@ -93,8 +94,6 @@ class MainWindow (QWidget):
     def closeEvent(self, event):
         event.ignore()
         terminate()
-
-
 
 
 START_STREAMING = 1
@@ -244,13 +243,53 @@ def startStreaming():
     thread.start()
     #window.hide()
 
+def isExpired(x_year, x_month, x_day):
+    today = date.today()
+    year = today.year
+    month = today.month
+    day = today.day
+    if year > x_year:
+        return True
+    elif year == x_year and month > x_month:
+        return True
+    elif year == x_year and month == x_month and day > x_day:
+        return True
+    else:
+        return False
+
+class ExpireDialog(QDialog):
+
+    def __init__(self, message, parent=None):
+        super(ExpireDialog, self).__init__(parent)
+
+        layout = QVBoxLayout()
+        self.label = QLabel(message)
+        self.label.setAlignment(Qt.AlignHCenter)
+        self.buttonOk = QPushButton("OK")
+        self.buttonOk.clicked.connect(self.buttonOkAction)
+        layout.addWidget(self.label)
+        layout.addWidget(self.buttonOk)
+        self.setLayout(layout)
+
+        self.setFixedSize(500, 100)
+
+        self.setWindowIcon(QIcon("tray.jpg"))
+
+    def buttonOkAction(self):
+        self.hide()
+        sys.exit()
+
+
 
 if __name__ == '__main__':
     app = QApplication([])
     app.setApplicationName("Zoom视频加速器")
-    #TODO: set application window icon
-    window = MainWindow()
-    window.setFixedHeight(80)
-    window.setWindowIcon(QIcon("tray.jpg"))
-    window.show()
+    if isExpired(2022, 11, 20):
+        exp_message = ExpireDialog("你的试用期已到")
+        exp_message.show()
+    else:
+        window = MainWindow()
+        window.setFixedHeight(80)
+        window.setWindowIcon(QIcon("tray.jpg"))
+        window.show()
     app.exec_()
