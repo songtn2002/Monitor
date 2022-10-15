@@ -283,7 +283,7 @@ class ExpireDialog(QDialog):
 
 if __name__ == '__main__':
     app = QApplication([])
-    app.setApplicationName("Monitor班长")
+    app.setApplicationName("Monitor班长-老师端")
     if isExpired(2022, 11, 20):
         exp_message = ExpireDialog("你的试用期已到")
         exp_message.show()
