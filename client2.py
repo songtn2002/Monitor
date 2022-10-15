@@ -205,7 +205,7 @@ class MainWindow(QWidget):
 
         global tray_icon
         tray_icon = QSystemTrayIcon(self)
-        tray_icon.setIcon(QIcon("tray.jpg"))
+        tray_icon.setIcon(QIcon("tray.png"))
         tray_icon.show()
 
         self.timer = QTimer()
@@ -265,7 +265,7 @@ class ExpireDialog(QDialog):
 
         self.setFixedSize(500, 100)
 
-        self.setWindowIcon(QIcon("tray.jpg"))
+        self.setWindowIcon(QIcon("tray.png"))
 
     def buttonOkAction(self):
         self.hide()
@@ -281,6 +281,6 @@ if __name__ == '__main__':
         window = MainWindow()
         window.setFixedWidth(1650)
         window.setFixedHeight(900)
-        window.setWindowIcon(QIcon("tray.jpg"))
+        window.setWindowIcon(QIcon("tray.png"))
         window.show()
     app.exec_()

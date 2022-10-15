@@ -1,2 +1,6 @@
 .idea/
 venv/
+build/
+dist/
+*.spec
+images_to_process/
