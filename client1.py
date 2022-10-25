@@ -137,6 +137,7 @@ def collectMsg(name, meeting_id):
     screen = np.array(screen)
     screen = cv2.resize(screen, (400, 200))
     screen = cv2.cvtColor(screen, cv2.COLOR_RGBA2RGB)
+    _, screen = cv2.imencode(".jpg", screen)
     screen = screen.tobytes()
     print("screen_length: " + str(len(screen)))
 
@@ -152,7 +153,11 @@ def collectMsg(name, meeting_id):
     timeStamp = timeStamp + b' ' * (100 - len(timeStamp))
     print("timeStamp:" + str(time.time()))
 
-    msg = b_meeting_id + b_name + timeStamp + screen
+    screen_len = str(len(screen)).encode("utf-8")
+    screen_len = screen_len + b' ' * (100-len(screen_len))
+
+    msg = b_meeting_id + b_name + timeStamp + screen_len + b' '*(30000-600-len(screen))
+    msg = msg + screen
     # print("image size: " + str(len(screen)))
     print("length sent: " + str(len(msg)))
     return msg

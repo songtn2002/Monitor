@@ -3,6 +3,7 @@ import sys
 import threading
 import time
 import numpy as np
+import cv2
 from datetime import date
 
 from PyQt5.QtGui import QIcon, QImage, QPixmap, QPainter, QPen, QColor, QBrush, QFont
@@ -70,20 +71,19 @@ def recvClassroom(client):
     prev_over = bytearray()
     for i in range (0, classroom_len):
         b_student = prev_over
-        while len(b_student)<240100:
-            if len(b_student) == 240000:
-                snippet = client.recv(100)
-            else:
-                snippet = client.recv(1000)
+        while len(b_student)<30000:
+            snippet = client.recv(1000)
             #print ("snippet length: "+str(len(snippet)))
             b_student = b_student + snippet
-        prev_over = b_student[240100:]
-        b_student = b_student[0:240100]
+        prev_over = b_student[30000:]
+        b_student = b_student[0:30000]
         #print("length of student "+str(i+1)+" is: "+str(len(b_student)))
         name = b_student[0:100].decode("utf-8").strip()
         print("name: "+name)
-        view = np.frombuffer(b_student[100:], dtype="uint8")
-        view = view.reshape(200, 400 , 3)
+        view_len = int(b_student[100:200].decode("utf-8").strip())
+        print("view_len: "+str(view_len))
+        view = np.frombuffer(b_student[-view_len:], dtype="uint8")
+        view = cv2.imdecode(view, cv2.IMREAD_UNCHANGED)
         classroom.append([name, view])
     return classroom
 
