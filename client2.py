@@ -8,7 +8,7 @@ from datetime import date
 
 from PyQt5.QtGui import QIcon, QImage, QPixmap, QPainter, QPen, QColor, QBrush, QFont
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QLineEdit, QPushButton, QApplication, \
-    QGridLayout, QSystemTrayIcon, QErrorMessage, QDialog
+    QGridLayout, QSystemTrayIcon, QErrorMessage, QDialog, QSizePolicy
 from PyQt5.QtCore import Qt, QTimer
 
 window = None
@@ -35,7 +35,7 @@ def iconShowMessage(message_type):
 def printStudents():
     res = "["
     for block in students:
-        bStr = "[" + block[0] +"]"
+        bStr = block[0]
         res += bStr + ", "
     res += "]"
     print(res)
@@ -71,12 +71,12 @@ def recvClassroom(client):
     prev_over = bytearray()
     for i in range (0, classroom_len):
         b_student = prev_over
-        while len(b_student)<40000:
+        while len(b_student)<70000:
             snippet = client.recv(1000)
             #print ("snippet length: "+str(len(snippet)))
             b_student = b_student + snippet
-        prev_over = b_student[40000:]
-        b_student = b_student[0:40000]
+        prev_over = b_student[70000:]
+        b_student = b_student[0:70000]
         #print("length of student "+str(i+1)+" is: "+str(len(b_student)))
         name = b_student[0:100].decode("utf-8").strip()
         print("name: "+name)
@@ -170,6 +170,11 @@ class MainWindow(QWidget):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
 
+        global app
+        screen_size = app.primaryScreen().size()
+        self.setMaximumSize(screen_size.width(), screen_size.height())
+        self.setMinimumSize(1000, 600)
+
         self.main_layout = QVBoxLayout()
         self.top_bar = QHBoxLayout()
         self.bottom_area = QGridLayout()
@@ -193,8 +198,7 @@ class MainWindow(QWidget):
         for i in range(0, 4):
             for j in range(0, 4):
                 label = QLabel()
-                label.setFixedWidth(400)
-                label.setFixedHeight(200)
+                label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
                 self.bottom_area.addWidget(label, i, j)
                 labels[i][j] = label
 
@@ -210,7 +214,7 @@ class MainWindow(QWidget):
 
         self.timer = QTimer()
         self.timer.timeout.connect(lambda: self.updateImages())
-        self.timer.start(2000)
+        self.timer.start(1500)
 
     def closeEvent(self, event):
         QWidget.closeEvent(self, event)
@@ -223,7 +227,10 @@ class MainWindow(QWidget):
         for i in range (0, len(students)):
             x = int(i/4)
             y = i%4
-            image = QImage(students[i][1], 400, 200, QImage.Format_RGB888)
+
+            student_screen = students[i][1]
+
+            image = QImage(student_screen, student_screen.shape[1], student_screen.shape[0], QImage.Format_RGB888)
 
             painter = QPainter(image)
             rectWidth = len(students[i][0])*12+5
@@ -231,8 +238,8 @@ class MainWindow(QWidget):
             painter.fillRect(400-rectWidth, 200-rectHeight, rectWidth, rectHeight, 1)
             painter.setFont(QFont("Times", 12, QFont.Bold))
             painter.setPen(QColor(255, 255, 255))
-            painter.drawText(400-rectWidth, 195, students[i][0])
-            labels[x][y].setPixmap(QPixmap.fromImage(image))
+            painter.drawText(400-rectWidth, 200-6, students[i][0])
+            labels[x][y].setPixmap(QPixmap.fromImage(image).scaled(labels[x][y].size()))
             painter.end()
 
 def isExpired(x_year, x_month, x_day):
@@ -279,8 +286,6 @@ if __name__ == '__main__':
         exp_message.show()
     else:
         window = MainWindow()
-        window.setFixedWidth(1650)
-        window.setFixedHeight(900)
         window.setWindowIcon(QIcon("Monitor Icon.png"))
         window.show()
     app.exec_()
