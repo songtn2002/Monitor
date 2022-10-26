@@ -5,8 +5,8 @@ import time
 import numpy as np
 
 PORT = 5051
-SERVER = ""
-#SERVER = socket.gethostbyname(socket.gethostname())
+#SERVER = ""
+SERVER = socket.gethostbyname(socket.gethostname())
 ADDR = (SERVER, PORT)
 FORMAT = "utf-8"
 DISCONNECT_MESSAGE = "!DISCONNECT"
@@ -100,8 +100,8 @@ def connSendClassroom(conn, classroom):
         name = name.encode(FORMAT)
         name = name + b' '*(100-len(name))
         screen_len = str(len(screen)).encode(FORMAT)
-        screen_len = name + b' '*(100-len(screen_len))
-        b_student1 = name + screen_len +b' '*(30000-200-len(screen))
+        screen_len = screen_len + b' '*(100-len(screen_len))
+        b_student1 = name + screen_len +b' '*(40000-200-len(screen))
         b_student1 = b_student1 + screen
         b_students.append(b_student1)
     #first turn all the students into bytes
@@ -111,7 +111,7 @@ def connSendClassroom(conn, classroom):
     classroom_len = classroom_len + b' ' * (4 - len(classroom_len))
     conn.send(classroom_len)
     for b_student2 in b_students:
-        for i in range(0, 30):
+        for i in range(0, 40):
             sent = b_student2[i*1000: i*1000+1000]
             conn.send(sent)
 
@@ -141,7 +141,7 @@ def recvMessage (conn, msg_len):
             conn.settimeout(10)
         else:
             conn.settimeout(7)
-            
+
         len_to_recv = min(1000, msg_len-len(msg))
         received = conn.recv(len_to_recv)
 
@@ -150,6 +150,7 @@ def recvMessage (conn, msg_len):
             raise ConnectionAbortedError("connection closed on the student client side")
         #print("received: "+str(len(received)))
         msg += received
+
     return msg
 
 def handle_student(conn, addr):
@@ -157,7 +158,7 @@ def handle_student(conn, addr):
     name = "%prev%"
     while True:
         try:
-            msg = recvMessage(conn, 30000)
+            msg = recvMessage(conn, 40000)
         except ConnectionError:
             print("student disconnected")
             break
@@ -172,7 +173,7 @@ def handle_student(conn, addr):
         name = msg[300:400].decode(FORMAT).strip()
         time_stamp = float(msg[400:500].decode(FORMAT).strip())
         screen_len = int(msg[500:600].decode(FORMAT).strip())
-        img = msg[(30000-screen_len):]
+        img = msg[(40000-screen_len):]
         addr_str = str(addr)
         view = [name, img, time_stamp, addr_str]
 

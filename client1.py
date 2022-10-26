@@ -17,9 +17,9 @@ import socket
 client = None
 clientIsOn = False
 DISCONNECT_MESSAGE = "!DISCONNECT"
-ADDR = ("120.48.128.151", 5051)
+#ADDR = ("120.48.128.151", 5051)
 MY = "dlskk90105kdlslnvnsl"
-#ADDR = ("192.168.50.31", 5051)
+ADDR = ("192.168.50.31", 5051)
 
 
 window = None
@@ -156,7 +156,7 @@ def collectMsg(name, meeting_id):
     screen_len = str(len(screen)).encode("utf-8")
     screen_len = screen_len + b' ' * (100-len(screen_len))
 
-    msg = b_meeting_id + b_name + timeStamp + screen_len + b' '*(30000-600-len(screen))
+    msg = b_meeting_id + b_name + timeStamp + screen_len + b' '*(40000-600-len(screen))
     msg = msg + screen
     # print("image size: " + str(len(screen)))
     print("length sent: " + str(len(msg)))

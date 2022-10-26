@@ -44,8 +44,8 @@ client = None
 clientIsOn = False
 prev_meeting_id = ""
 DISCONNECT_MESSAGE = "!DISCONNECT"
-ADDR = ("120.48.128.151", 5051)
-#ADDR = ("192.168.50.31", 5051)
+#ADDR = ("120.48.128.151", 5051)
+ADDR = ("192.168.50.31", 5051)
 MY = "dlskk90105kdlslnvnsl"
 
 def closeClient():
@@ -71,18 +71,18 @@ def recvClassroom(client):
     prev_over = bytearray()
     for i in range (0, classroom_len):
         b_student = prev_over
-        while len(b_student)<30000:
+        while len(b_student)<40000:
             snippet = client.recv(1000)
             #print ("snippet length: "+str(len(snippet)))
             b_student = b_student + snippet
-        prev_over = b_student[30000:]
-        b_student = b_student[0:30000]
+        prev_over = b_student[40000:]
+        b_student = b_student[0:40000]
         #print("length of student "+str(i+1)+" is: "+str(len(b_student)))
         name = b_student[0:100].decode("utf-8").strip()
         print("name: "+name)
         view_len = int(b_student[100:200].decode("utf-8").strip())
         print("view_len: "+str(view_len))
-        view = np.frombuffer(b_student[-view_len:], dtype="uint8")
+        view = np.frombuffer(b_student[-view_len : ], dtype="uint8")
         view = cv2.imdecode(view, cv2.IMREAD_UNCHANGED)
         classroom.append([name, view])
     return classroom
