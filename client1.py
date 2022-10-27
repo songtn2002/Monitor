@@ -19,7 +19,7 @@ clientIsOn = False
 DISCONNECT_MESSAGE = "!DISCONNECT"
 #ADDR = ("120.48.128.151", 5051)
 MY = "dlskk90105kdlslnvnsl"
-ADDR = ("192.168.50.31", 5051)
+ADDR = ("192.168.50.32", 5051)
 
 
 window = None
@@ -137,7 +137,8 @@ def collectMsg(name, meeting_id):
     screen = np.array(screen)
     screen = cv2.resize(screen, (400, 200))
     screen = cv2.cvtColor(screen, cv2.COLOR_BGRA2RGB)
-    _, screen = cv2.imencode(".jpg", screen)
+    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 80]
+    _, screen = cv2.imencode(".jpg", screen, encode_param)
     screen = screen.tobytes()
     print("screen_length: " + str(len(screen)))
 

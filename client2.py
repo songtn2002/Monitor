@@ -45,7 +45,7 @@ clientIsOn = False
 prev_meeting_id = ""
 DISCONNECT_MESSAGE = "!DISCONNECT"
 #ADDR = ("120.48.128.151", 5051)
-ADDR = ("192.168.50.31", 5051)
+ADDR = ("192.168.50.32", 5051)
 MY = "dlskk90105kdlslnvnsl"
 
 def closeClient():

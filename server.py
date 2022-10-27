@@ -175,6 +175,7 @@ def handle_student(conn, addr):
         screen_len = int(msg[500:600].decode(FORMAT).strip())
         img = msg[-screen_len:]
         addr_str = str(addr)
+
         view = [name, img, time_stamp, addr_str]
 
         if meeting_id in classrooms.keys():
