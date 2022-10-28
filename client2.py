@@ -47,6 +47,7 @@ DISCONNECT_MESSAGE = "!DISCONNECT"
 #ADDR = ("120.48.128.151", 5051)
 ADDR = ("192.168.50.32", 5051)
 MY = "dlskk90105kdlslnvnsl"
+BLOCK_SIZE = 60000
 
 def closeClient():
     global client, clientIsOn
@@ -71,12 +72,12 @@ def recvClassroom(client):
     prev_over = bytearray()
     for i in range (0, classroom_len):
         b_student = prev_over
-        while len(b_student)<70000:
+        while len(b_student) < BLOCK_SIZE:
             snippet = client.recv(1000)
             #print ("snippet length: "+str(len(snippet)))
             b_student = b_student + snippet
-        prev_over = b_student[70000:]
-        b_student = b_student[0:70000]
+        prev_over = b_student[BLOCK_SIZE:]
+        b_student = b_student[0:BLOCK_SIZE]
         #print("length of student "+str(i+1)+" is: "+str(len(b_student)))
         name = b_student[0:100].decode("utf-8").strip()
         print("name: "+name)

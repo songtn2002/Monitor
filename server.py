@@ -9,6 +9,7 @@ PORT = 5051
 SERVER = socket.gethostbyname(socket.gethostname())
 ADDR = (SERVER, PORT)
 FORMAT = "utf-8"
+BLOCK_SIZE = 60000
 DISCONNECT_MESSAGE = "!DISCONNECT"
 MY = "dlskk90105kdlslnvnsl"
 
@@ -101,7 +102,7 @@ def connSendClassroom(conn, classroom):
         name = name + b' '*(100-len(name))
         screen_len = str(len(screen)).encode(FORMAT)
         screen_len = screen_len + b' '*(100-len(screen_len))
-        b_student1 = name + screen_len +b' '*(70000-200-len(screen))
+        b_student1 = name + screen_len +b' '*(BLOCK_SIZE-200-len(screen))
         b_student1 = b_student1 + screen
         b_students.append(b_student1)
     #first turn all the students into bytes
@@ -111,7 +112,7 @@ def connSendClassroom(conn, classroom):
     classroom_len = classroom_len + b' ' * (4 - len(classroom_len))
     conn.send(classroom_len)
     for b_student2 in b_students:
-        for i in range(0, 70):
+        for i in range(0, int(BLOCK_SIZE/1000) ):
             sent = b_student2[i*1000: i*1000+1000]
             conn.send(sent)
 
@@ -158,7 +159,7 @@ def handle_student(conn, addr):
     name = "%prev%"
     while True:
         try:
-            msg = recvMessage(conn, 70000)
+            msg = recvMessage(conn, BLOCK_SIZE)
         except ConnectionError:
             print("student disconnected")
             break
@@ -169,12 +170,16 @@ def handle_student(conn, addr):
             print("Exception: "+str(excp))
             break
 
-        meeting_id = msg[0:300].decode(FORMAT).strip()
-        name = msg[300:400].decode(FORMAT).strip()
-        time_stamp = float(msg[400:500].decode(FORMAT).strip())
-        screen_len = int(msg[500:600].decode(FORMAT).strip())
-        img = msg[-screen_len:]
-        addr_str = str(addr)
+        try:
+            addr_str = str(addr)
+            meeting_id = msg[0:300].decode(FORMAT).strip()
+            name = msg[300:400].decode(FORMAT).strip()
+            time_stamp = float(msg[400:500].decode(FORMAT).strip())
+            screen_len = int(msg[500:600].decode(FORMAT).strip())
+            img = msg[-screen_len:]
+        except UnicodeDecodeError:
+            print("[UnicodeDecodeError]: Message Oversize")
+            break
 
         view = [name, img, time_stamp, addr_str]
 

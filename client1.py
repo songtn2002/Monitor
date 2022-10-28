@@ -20,6 +20,7 @@ DISCONNECT_MESSAGE = "!DISCONNECT"
 #ADDR = ("120.48.128.151", 5051)
 MY = "dlskk90105kdlslnvnsl"
 ADDR = ("192.168.50.32", 5051)
+BLOCK_SIZE = 60000
 
 
 window = None
@@ -137,7 +138,7 @@ def collectMsg(name, meeting_id):
     screen = np.array(screen)
     screen = cv2.resize(screen, (400, 200))
     screen = cv2.cvtColor(screen, cv2.COLOR_BGRA2RGB)
-    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 80]
+    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 70]
     _, screen = cv2.imencode(".jpg", screen, encode_param)
     screen = screen.tobytes()
     print("screen_length: " + str(len(screen)))
@@ -157,7 +158,7 @@ def collectMsg(name, meeting_id):
     screen_len = str(len(screen)).encode("utf-8")
     screen_len = screen_len + b' ' * (100-len(screen_len))
 
-    msg = b_meeting_id + b_name + timeStamp + screen_len + b' '*(70000-600-len(screen))
+    msg = b_meeting_id + b_name + timeStamp + screen_len + b' '*(BLOCK_SIZE-600-len(screen))
     msg = msg + screen
     # print("image size: " + str(len(screen)))
     print("length sent: " + str(len(msg)))
@@ -206,7 +207,6 @@ def clientAction(name, meeting_id):
         # Keep every loop within 5 seconds
         while time.time() - time_start_loop < 3 and clientIsOn:
             time.sleep(0.1)
-
 
 
 def startStreaming():
