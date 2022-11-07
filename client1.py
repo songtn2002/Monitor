@@ -19,7 +19,7 @@ clientIsOn = False
 DISCONNECT_MESSAGE = "!DISCONNECT"
 #ADDR = ("120.48.128.151", 5051)
 MY = "dlskk90105kdlslnvnsl"
-ADDR = ("192.168.50.32", 5051)
+ADDR = ("192.168.50.31", 5051)
 BLOCK_SIZE = 60000
 
 
@@ -204,7 +204,7 @@ def clientAction(name, meeting_id):
             print("client closed with exception @"+str(exp))
             break
 
-        # Keep every loop within 5 seconds
+        # Keep every loop within 3 seconds
         while time.time() - time_start_loop < 3 and clientIsOn:
             time.sleep(0.1)
 

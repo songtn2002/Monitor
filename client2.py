@@ -11,6 +11,8 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QLineEdit
     QGridLayout, QSystemTrayIcon, QErrorMessage, QDialog, QSizePolicy
 from PyQt5.QtCore import Qt, QTimer
 
+import platform
+
 window = None
 labels = [[None, None, None, None], [None, None, None, None], [None, None, None, None], [None, None, None, None]]
 students = []
@@ -45,9 +47,10 @@ clientIsOn = False
 prev_meeting_id = ""
 DISCONNECT_MESSAGE = "!DISCONNECT"
 #ADDR = ("120.48.128.151", 5051)
-ADDR = ("192.168.50.32", 5051)
+ADDR = ("192.168.50.31", 5051)
 MY = "dlskk90105kdlslnvnsl"
 BLOCK_SIZE = 60000
+SYSTEM = platform.system().lower()
 
 def closeClient():
     global client, clientIsOn
@@ -233,13 +236,22 @@ class MainWindow(QWidget):
 
             image = QImage(student_screen, student_screen.shape[1], student_screen.shape[0], QImage.Format_RGB888)
 
-            painter = QPainter(image)
-            rectWidth = len(students[i][0])*12+5
-            rectHeight = 30
-            painter.fillRect(400-rectWidth, 200-rectHeight, rectWidth, rectHeight, 1)
-            painter.setFont(QFont("Times", 12, QFont.Bold))
-            painter.setPen(QColor(255, 255, 255))
-            painter.drawText(400-rectWidth, 200-6, students[i][0])
+            if not SYSTEM == "darwin": #if operating system is windows or linux
+                painter = QPainter(image)
+                rectWidth = len(students[i][0])*12+5
+                rectHeight = 30
+                painter.fillRect(400-rectWidth, 200-rectHeight, rectWidth, rectHeight, 1)
+                painter.setFont(QFont("Sans Serif", 12, QFont.Bold))
+                painter.setPen(QColor(255, 255, 255))
+                painter.drawText(400-rectWidth, 200-6, students[i][0])
+            else: #if operating system is Mac
+                painter = QPainter(image)
+                rectWidth = len(students[i][0]) * 15 + 5
+                rectHeight = 30
+                painter.fillRect(400 - rectWidth, 200 - rectHeight, rectWidth, rectHeight, 1)
+                painter.setFont(QFont("Sans Serif", 30, QFont.Normal))
+                painter.setPen(QColor(255, 255, 255))
+                painter.drawText(400 - rectWidth, 200 - 6, students[i][0])
             labels[x][y].setPixmap(QPixmap.fromImage(image).scaled(labels[x][y].size()))
             painter.end()
 
